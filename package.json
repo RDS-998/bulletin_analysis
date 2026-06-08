@@ -1,0 +1,18 @@
+{
+  "name": "lazio-pc-analyzer",
+  "version": "1.0.0",
+  "description": "Questo è un applicativo web interno progettato per semplificare e automatizzare il lavoro di analisi dei bollettini giornalieri della **Protezione Civile della Regione Lazio** (Criticità Idrogeologica/Idraulica e Rischio Incendi Boschivi AIB) e per generare istantaneamente sia il testo dei post social che le grafiche pronte per la pubblicazione (formato Post 1:1 e Instagram Story 9:16).",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.17.0",
+    "cheerio": "^1.2.0",
+    "pdf-parse": "^1.1.1"
+  }
+}

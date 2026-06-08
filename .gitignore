@@ -1,0 +1,4 @@
+node_modules/
+pdf_cache/
+.DS_Store
+*.log
