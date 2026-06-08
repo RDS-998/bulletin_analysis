@@ -46,22 +46,16 @@ async function initApp() {
     }
     database = window.DATABASE;
     
-    // Imposta la data iniziale a quella più recente disponibile nel database
-    const availableDates = Object.keys(database).sort((a,b) => {
-      const pA = a.split('-').reverse().join('');
-      const pB = b.split('-').reverse().join('');
-      return pB.localeCompare(pA);
-    });
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    const todayStr = `${dd}-${mm}-${yyyy}`;
     
-    if (availableDates.length > 0) {
-      const latest = availableDates[0];
-      currentData.date = latest;
-      // Imposta il selettore date
-      const [dd, mm, yyyy] = latest.split('-');
-      selectDate.value = `${yyyy}-${mm}-${dd}`;
-    }
+    currentData.date = todayStr;
+    selectDate.value = `${yyyy}-${mm}-${dd}`;
 
-    loadDateData(currentData.date);
+    loadDateData(todayStr);
   } catch (err) {
     console.error("Errore nel caricamento del database:", err);
     alert("Impossibile caricare il database dei bollettini. Assicurati che data.js sia stato generato.");
