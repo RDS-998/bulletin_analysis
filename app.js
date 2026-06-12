@@ -361,4 +361,4 @@ document.getElementById('btn-copy').addEventListener('click', () => {
 });
 
 // Initial Render
-renderUI();
+initApp();
