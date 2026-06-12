@@ -29,6 +29,7 @@ async function scrapePdfLink(pageUrl, dateStr) {
     const response = await axios.get(pageUrl);
     const $ = cheerio.load(response.data);
     
+    const dateSlash = dateStr.replace(/-/g, '/');
     const dateUnderscore = dateStr.replace(/-/g, '_');
     const dateNoDash = dateStr.replace(/-/g, '');
     const dateReverse = dateStr.split('-').reverse().join('');
@@ -44,7 +45,11 @@ async function scrapePdfLink(pageUrl, dateStr) {
       
       if (lowerHref.endsWith('.pdf')) {
         const fullLink = href.startsWith('http') ? href : `https://protezionecivile.regione.lazio.it${href}`;
+        const textContent = $(el).text();
+        
         if (
+          textContent.includes(dateSlash) ||
+          textContent.includes(dateStr) ||
           fullLink.includes(dateUnderscore) || 
           fullLink.includes(dateStr) || 
           fullLink.includes(dateNoDash) ||
@@ -65,78 +70,105 @@ async function scrapePdfLink(pageUrl, dateStr) {
   }
 }
 
-function parseHydroText(text) {
-  const hydroData = {};
-  hydroZones.forEach(z => hydroData[z] = 'VERDE');
+function parseHydroTextMultipleDays(text) {
+  const daysData = {};
+  if (!text) return daysData;
 
-  if (!text) return hydroData;
+  const lines = text.split('\n');
+  let currentDate = null;
 
-  const hydroRegex = /ZONA\s+([A-G])\s*[:\-\s]+(?:.*?)(VERDE|GIALLA|ARANCIONE|ROSSA|GIALLO|ARANCIONE|ROSSO)/gi;
-  let match;
-  let matchesFound = false;
+  const severityMap = {
+    'VERDE': 0, 'GIALLA': 1, 'GIALLO': 1, 'ARANCIONE': 2, 'ROSSA': 3, 'ROSSO': 3
+  };
+  const severityToColor = ['VERDE', 'GIALLA', 'ARANCIONE', 'ROSSA'];
 
-  while ((match = hydroRegex.exec(text)) !== null) {
-    matchesFound = true;
-    const zoneId = match[1].toUpperCase();
-    let val = match[2].toUpperCase();
-    if (val === 'GIALLO') val = 'GIALLA';
-    if (val === 'ROSSO') val = 'ROSSA';
-    if (hydroZones.includes(zoneId)) {
-      hydroData[zoneId] = val;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const dateMatch = line.match(/(?:OGGI|DOMANI|DOPODOMANI).*?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (dateMatch) {
+      let dStr = dateMatch[1].replace(/\//g, '-');
+      let [d, m, y] = dStr.split('-');
+      d = d.padStart(2, '0');
+      m = m.padStart(2, '0');
+      currentDate = `${d}-${m}-${y}`;
+      if (!daysData[currentDate]) {
+        daysData[currentDate] = {};
+        hydroZones.forEach(z => daysData[currentDate][z] = 'VERDE');
+      }
+      continue;
     }
-  }
 
-  // Fallback regex se il formato è leggermente diverso (es. "Zona A - GIALLA")
-  if (!matchesFound) {
-    const lines = text.split('\n');
-    lines.forEach(line => {
-      const match = line.match(/ZONA\s+([A-G]).*?(VERDE|GIALLA|ARANCIONE|ROSSA|GIALLO|ARANCIONE|ROSSO)/i);
+    if (currentDate) {
+      const match = line.match(/^([A-G])\s*(VERDE|GIALLA|GIALLO|ARANCIONE|ROSSA|ROSSO)\s*(VERDE|GIALLA|GIALLO|ARANCIONE|ROSSA|ROSSO)\s*(VERDE|GIALLA|GIALLO|ARANCIONE|ROSSA|ROSSO)/i);
       if (match) {
         const zoneId = match[1].toUpperCase();
-        let val = match[2].toUpperCase();
-        if (val === 'GIALLO') val = 'GIALLA';
-        if (val === 'ROSSO') val = 'ROSSA';
+        const v1 = severityMap[match[2].toUpperCase()] || 0;
+        const v2 = severityMap[match[3].toUpperCase()] || 0;
+        const v3 = severityMap[match[4].toUpperCase()] || 0;
+        const maxSeverity = Math.max(v1, v2, v3);
+        
         if (hydroZones.includes(zoneId)) {
-          hydroData[zoneId] = val;
+          const currentSeverity = severityMap[daysData[currentDate][zoneId]] || 0;
+          const finalSeverity = Math.max(currentSeverity, maxSeverity);
+          daysData[currentDate][zoneId] = severityToColor[finalSeverity];
         }
       }
-    });
+    }
   }
-  return hydroData;
+
+  // Se non troviamo giorni validi
+  if (Object.keys(daysData).length === 0) {
+    return null;
+  }
+
+  return daysData;
 }
 
-function parseAibText(text) {
-  const aibData = {};
-  aibZones.forEach(z => aibData[z] = 'VERDE');
+function parseAibTextMultipleDays(text) {
+  const daysData = {};
   
-  if (!text) return aibData;
+  if (!text) return daysData;
 
-  // Analisi semplificata: cerca "SETTORE 1 ... MEDIO/GIALLA"
-  // Valori possibili AIB di solito sono: BASSO, MEDIO, ALTO
-  // O colori: VERDE, GIALLA, ROSSA
-  // Proviamo a estrarre riga per riga
   const lines = text.split('\n');
-  lines.forEach(line => {
-    // Cerchiamo numeri da 1 a 14 vicini a parole chiave
-    const match = line.match(/(\d{1,2})\s+.*?((?:BASSO|MEDIO|ALTO|VERDE|GIALLA|ROSSA|ROSSO|GIALLO|ARANCIONE))/i);
-    if (match) {
-      const zoneId = match[1];
-      let valWord = match[2].toUpperCase();
-      
-      let finalVal = 'VERDE';
-      if (valWord === 'MEDIO' || valWord === 'GIALLA' || valWord === 'GIALLO' || valWord === 'ARANCIONE') {
-        finalVal = 'GIALLA';
-      } else if (valWord === 'ALTO' || valWord === 'ROSSA' || valWord === 'ROSSO') {
-        finalVal = 'ROSSA';
+  let currentDate = null;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const dateMatch = line.match(/Previsioni per .*?\s+(\d{1,2}-\d{1,2}-\d{4})/i);
+    if (dateMatch) {
+      let [d, m, y] = dateMatch[1].split('-');
+      d = d.padStart(2, '0');
+      m = m.padStart(2, '0');
+      currentDate = `${d}-${m}-${y}`;
+      if (!daysData[currentDate]) {
+        daysData[currentDate] = {};
+        aibZones.forEach(z => daysData[currentDate][z] = 'VERDE');
       }
-
-      if (aibZones.includes(zoneId)) {
-        aibData[zoneId] = finalVal;
+      continue;
+    }
+    
+    if (currentDate && line.startsWith('Pericolosità')) {
+      const valLine = lines[i+1] ? lines[i+1].trim() : '';
+      if (valLine) {
+        const matches = valLine.match(/(BASSO|MEDIO|ALTO|MODERATO|ELEVATO)/gi);
+        if (matches && matches.length === 14) {
+          matches.forEach((val, idx) => {
+            const zoneId = String(idx + 1);
+            const valWord = val.toUpperCase();
+            let finalVal = 'VERDE';
+            if (valWord === 'MEDIO' || valWord === 'MODERATO') {
+              finalVal = 'GIALLA';
+            } else if (valWord === 'ALTO' || valWord === 'ELEVATO') {
+              finalVal = 'ROSSA';
+            }
+            daysData[currentDate][zoneId] = finalVal;
+          });
+        }
       }
     }
-  });
+  }
 
-  return aibData;
+  return daysData;
 }
 
 async function runScraper() {
@@ -154,9 +186,9 @@ async function runScraper() {
     }
   }
 
-  // Calcola ultimi 7 giorni
+  // Calcola ultimi 7 giorni (dal più vecchio al più recente)
   const datesToScrape = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dd = String(d.getDate()).padStart(2, '0');
@@ -178,7 +210,21 @@ async function runScraper() {
     if (hydroLink) {
       console.log(`[${dateStr}] Trovato link Hydro: ${hydroLink}`);
       const text = await fetchPdfText(hydroLink);
-      allData[dateStr].hydro = parseHydroText(text);
+      const hydroDaysData = parseHydroTextMultipleDays(text);
+      
+      if (hydroDaysData && Object.keys(hydroDaysData).length > 0) {
+        for (const [dayDate, dayData] of Object.entries(hydroDaysData)) {
+          if (!allData[dayDate]) {
+            allData[dayDate] = { hydro: {}, aib: {} };
+          }
+          allData[dayDate].hydro = dayData;
+        }
+      } else {
+        console.log(`[${dateStr}] Nessun dato estratto da Hydro.`);
+        if (Object.keys(allData[dateStr].hydro).length === 0) {
+          hydroZones.forEach(z => allData[dateStr].hydro[z] = 'VERDE');
+        }
+      }
     } else {
       console.log(`[${dateStr}] Nessun link Hydro trovato.`);
       if (Object.keys(allData[dateStr].hydro).length === 0) {
@@ -191,7 +237,21 @@ async function runScraper() {
     if (aibLink) {
       console.log(`[${dateStr}] Trovato link AIB: ${aibLink}`);
       const text = await fetchPdfText(aibLink);
-      allData[dateStr].aib = parseAibText(text);
+      const aibDaysData = parseAibTextMultipleDays(text);
+      
+      if (Object.keys(aibDaysData).length > 0) {
+        for (const [dayDate, dayData] of Object.entries(aibDaysData)) {
+          if (!allData[dayDate]) {
+            allData[dayDate] = { hydro: {}, aib: {} };
+          }
+          allData[dayDate].aib = dayData;
+        }
+      } else {
+        console.log(`[${dateStr}] Nessun dato estratto da AIB.`);
+        if (Object.keys(allData[dateStr].aib).length === 0) {
+          aibZones.forEach(z => allData[dateStr].aib[z] = 'VERDE');
+        }
+      }
     } else {
       console.log(`[${dateStr}] Nessun link AIB trovato.`);
       if (Object.keys(allData[dateStr].aib).length === 0) {
