@@ -1,7 +1,34 @@
 // File generato automaticamente
 window.DATABASE = {
-  "13-06-2026": {
+  "14-06-2026": {
     "hydro": {},
+    "aib": {
+      "1": "GIALLA",
+      "2": "GIALLA",
+      "3": "GIALLA",
+      "4": "GIALLA",
+      "5": "GIALLA",
+      "6": "VERDE",
+      "7": "VERDE",
+      "8": "GIALLA",
+      "9": "GIALLA",
+      "10": "GIALLA",
+      "11": "GIALLA",
+      "12": "GIALLA",
+      "13": "GIALLA",
+      "14": "GIALLA"
+    }
+  },
+  "13-06-2026": {
+    "hydro": {
+      "A": "VERDE",
+      "B": "VERDE",
+      "C": "VERDE",
+      "D": "VERDE",
+      "E": "VERDE",
+      "F": "VERDE",
+      "G": "VERDE"
+    },
     "aib": {
       "1": "GIALLA",
       "2": "GIALLA",
