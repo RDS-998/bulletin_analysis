@@ -1,6 +1,6 @@
 // File generato automaticamente
 window.DATABASE = {
-  "21-06-2026": {
+  "22-06-2026": {
     "hydro": {},
     "aib": {
       "1": "GIALLA",
@@ -9,6 +9,33 @@ window.DATABASE = {
       "4": "GIALLA",
       "5": "GIALLA",
       "6": "GIALLA",
+      "7": "VERDE",
+      "8": "GIALLA",
+      "9": "GIALLA",
+      "10": "GIALLA",
+      "11": "GIALLA",
+      "12": "GIALLA",
+      "13": "GIALLA",
+      "14": "GIALLA"
+    }
+  },
+  "21-06-2026": {
+    "hydro": {
+      "A": "VERDE",
+      "B": "VERDE",
+      "C": "VERDE",
+      "D": "VERDE",
+      "E": "VERDE",
+      "F": "VERDE",
+      "G": "VERDE"
+    },
+    "aib": {
+      "1": "GIALLA",
+      "2": "GIALLA",
+      "3": "GIALLA",
+      "4": "GIALLA",
+      "5": "GIALLA",
+      "6": "VERDE",
       "7": "VERDE",
       "8": "GIALLA",
       "9": "GIALLA",
@@ -35,7 +62,7 @@ window.DATABASE = {
       "3": "GIALLA",
       "4": "GIALLA",
       "5": "GIALLA",
-      "6": "GIALLA",
+      "6": "VERDE",
       "7": "VERDE",
       "8": "GIALLA",
       "9": "GIALLA",
@@ -341,33 +368,6 @@ window.DATABASE = {
       "12": "VERDE",
       "13": "GIALLA",
       "14": "GIALLA"
-    }
-  },
-  "08-06-2026": {
-    "hydro": {
-      "A": "VERDE",
-      "B": "VERDE",
-      "C": "VERDE",
-      "D": "VERDE",
-      "E": "VERDE",
-      "F": "VERDE",
-      "G": "VERDE"
-    },
-    "aib": {
-      "1": "GIALLA",
-      "2": "GIALLA",
-      "3": "GIALLA",
-      "4": "GIALLA",
-      "5": "VERDE",
-      "6": "VERDE",
-      "7": "VERDE",
-      "8": "GIALLA",
-      "9": "GIALLA",
-      "10": "VERDE",
-      "11": "GIALLA",
-      "12": "VERDE",
-      "13": "VERDE",
-      "14": "VERDE"
     }
   }
 };
