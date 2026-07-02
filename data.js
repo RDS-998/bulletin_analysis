@@ -1,7 +1,15 @@
 // File generato automaticamente
 window.DATABASE = {
   "02-07-2026": {
-    "hydro": {},
+    "hydro": {
+      "A": "VERDE",
+      "B": "VERDE",
+      "C": "VERDE",
+      "D": "VERDE",
+      "E": "VERDE",
+      "F": "VERDE",
+      "G": "VERDE"
+    },
     "aib": {
       "1": "GIALLA",
       "2": "GIALLA",
